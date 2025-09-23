@@ -73,10 +73,6 @@ def load_vllm(model_name_or_path: str = "HuggingFaceH4/zephyr-7b-beta") -> LLM:
     return model
 
 
-from typing import List, Dict, Any
-from datasets import load_dataset
-
-
 def load_redocred(split: str = "train") -> Any:
     """
     Load the reDocRED dataset from Hugging Face Datasets.
@@ -215,66 +211,6 @@ def annotate_entities(text: str, prompt: str, iter: int = 1, threshold: float = 
 
     return result
 
-def annotate_entities(text: str, prompt: str, iter: int = 1, ) -> List[Dict]:
-    """
-    Annotate entities in the given text.
-
-    Args:
-        text (str): The input text to annotate.
-        prompt (str): The prompt to guide the annotation process.
-        iter (int): The iteration number for Self Consistency. Defaults to 1 (no Self Consistency).
-
-    Returns:
-        List[Dict]: A list of dictionaries containing annotated entities.
-    """
-    
-    def parse_entities_from_response(response: str) -> Set[Tuple[str, str]]:
-        """
-        Parse entities from the model response text.
-        
-        Args:
-            response (str): Model output text in format "Possible Entities: e_1, e_2, ..., e_n".
-        
-        Returns:
-            Set[Tuple[str, str]]: List of extracted entity tuples (Entity, Type).
-        """
-        entities = set()
-
-        pattern = r"\(([^)]+)\s*\|\s*([^)]+)\)"
-        matches = re.findall(pattern, response)
-
-        for match in matches:
-            entities.add((match[0].strip(), match[1]))  # (Entity, Type)
-
-        return entities
-    
-    # To be played with
-    sampling_params = SamplingParams(
-        temperature=0.8, 
-        top_p=1,
-        top_k=-1,
-        repetition_penalty=1.1,
-        max_tokens=512, 
-        min_tokens=64
-        
-    )
-    entities = []
-    for i in range(iter):
-    # TODO: DONE!
-    #  Parse response to extract entities and merge results. We merge in Self Consistency fashion where if it appears in n% time of all iteration, we keep it.
-    #  This is to find Self_Consitency(T') so that we can merge with K' to get K^i
-        response = chat_vllm(
-            model=load_vllm(),
-            system_query=prompt,
-            query=text,
-            sampling_params=sampling_params
-        )
-        parsed_entities = parse_entities_from_response(response)
-        all_entities.extend(parsed_entities)
-
-    unique_entities = { (e["entity"], e["type"]): e for e in all_entities }
-    return list(unique_entities.values())
-
 def gen_entity_annotation_prompt(entities: List[Dict] = []) -> str:
     """
     Generate a prompt for entity annotation based on the provided entities.
@@ -346,10 +282,6 @@ def gen_entity_annotation_prompt(entities: List[Dict] = []) -> str:
             )
 
     return prompt + "===\nText: "
-
-
-import re
-from typing import List, Dict, Set, Tuple
 
 # This is the function to get K'
 def naive_mapping(text: str, triples: List[Dict]) -> Tuple[List[Dict], Set[Tuple[str, str]]]:
