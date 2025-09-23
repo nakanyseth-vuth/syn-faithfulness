@@ -148,11 +148,6 @@ def format_dataset_redocred(dataset: Any) -> List[Dict]:
 
     return annotated_triples
 
-import re
-from typing import List, Dict, Set, Tuple
-from collections import Counter
-from vllm import SamplingParams
-
 
 def annotate_entities(text: str, prompt: str, iter: int = 1, threshold: float = 0.5) -> List[Dict]:
     """
