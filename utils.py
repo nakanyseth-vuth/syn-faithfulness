@@ -1,9 +1,10 @@
-from typing import Tuple, List, Dict, Set
+from typing import Tuple, List, Dict, Set, Any
 from collections import Counter
 import re
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from datasets import load_dataset
 from vllm import LLM, SamplingParams
 
 
@@ -73,7 +74,7 @@ def load_vllm(model_name_or_path: str = "HuggingFaceH4/zephyr-7b-beta") -> LLM:
     return model
 
 
-def load_redocred(split: str = "train") -> Any:
+def load_redocred() -> Any:
     """
     Load the reDocRED dataset from Hugging Face Datasets.
     Args:
@@ -81,7 +82,7 @@ def load_redocred(split: str = "train") -> Any:
     Returns:
         Dataset: A Hugging Face Dataset object
     """
-    return load_dataset("tonytan48/Re-DocRED", split=split)
+    return load_dataset("docred")
 
 
 def format_dataset_redocred(dataset: Any) -> List[Dict]:
