@@ -1,34 +1,67 @@
-from typing import Tuple, List, Dict, Set, Any
+import os
+import logging
+from typing import Tuple, List, Dict, Set, Any, Optional
 from collections import Counter
 import re
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from datasets import load_dataset
-from vllm import LLM, SamplingParams
+
+try:  # vLLM is optional at runtime
+    from vllm import LLM, SamplingParams
+    _VLLM_AVAILABLE = True
+except Exception:  # pragma: no cover - triggered when vllm is not installed/usable
+    LLM = None  # type: ignore[assignment]
+    SamplingParams = None  # type: ignore[assignment]
+    _VLLM_AVAILABLE = False
+
+try:  # API fallback via OpenAI-compatible clients is optional
+    from openai import OpenAI
+    _OPENAI_AVAILABLE = True
+except Exception:  # pragma: no cover - triggered when openai package is absent
+    OpenAI = None  # type: ignore[assignment]
+    _OPENAI_AVAILABLE = False
+
+try:
+    import requests
+    _REQUESTS_AVAILABLE = True
+except Exception:  # pragma: no cover - triggered when requests is absent
+    requests = None  # type: ignore[assignment]
+    _REQUESTS_AVAILABLE = False
+
+
+logger = logging.getLogger(__name__)
+
+_VLLM_CACHE: Dict[str, Any] = {}
+_OPENAI_CLIENT: Optional[Any] = None
 
 
 
 
 def chat_vllm(
-    model,
+    model: Optional[Any],
     query: str,
     system_query: str,
-    sampling_params: SamplingParams
-):
-    if system_query == '':
-        messages=[
-            {"role": "user", "content": query}
-        ]
-    else:
-        messages=[
-            {"role": "system", "content": system_query},
-            {"role": "user", "content": query}
-        ]
-    output = model.chat(messages, sampling_params, use_tqdm=False)
-    prompt = output[0].prompt
-    generated_text = output[0].outputs[0].text
+    sampling_params: Optional[Any]
+) -> str:
+    """Generate text using a vLLM backend."""
+    if model is None or sampling_params is None:
+        raise RuntimeError("vLLM backend is unavailable")
 
+    messages = (
+        [{"role": "system", "content": system_query}] if system_query else []
+    ) + [{"role": "user", "content": query}]
+
+    try:
+        output = model.chat(messages, sampling_params, use_tqdm=False)
+    except Exception as exc:  # pragma: no cover - runtime GPU/device failures
+        raise RuntimeError(f"vLLM generation failed: {exc}") from exc
+
+    if not output or not getattr(output[0], "outputs", None):
+        raise RuntimeError("vLLM returned empty output")
+
+    generated_text = output[0].outputs[0].text
     return generated_text
 
 
@@ -59,19 +92,136 @@ def load_llm(model_name_or_path: str = "HuggingFaceH4/zephyr-7b-beta") -> Tuple[
     return model, tokenizer
 
 
-def load_vllm(model_name_or_path: str = "HuggingFaceH4/zephyr-7b-beta") -> LLM:
-    """
-    Load a vLLM model for text generation.
-
-    Args:
-        model_name_or_path (str, optional): The model name or path for vLLM. 
-            Defaults to "HuggingFaceH4/zephyr-7b-beta"
+def load_vllm(model_name_or_path: str = "HuggingFaceH4/zephyr-7b-beta") -> Optional[Any]:
+    """Load (and cache) a vLLM model for text generation.
 
     Returns:
-        LLM: A vLLM model instance ready for text generation.
+        Optional[Any]: A ready-to-use vLLM instance, or ``None`` when vLLM is not
+        available or the model fails to load (e.g., due to missing GPU resources).
     """
-    model = LLM(model=model_name_or_path, task="generate")
+    if not _VLLM_AVAILABLE or LLM is None:
+        logger.debug("vLLM is not available in this environment")
+        return None
+
+    if model_name_or_path in _VLLM_CACHE:
+        return _VLLM_CACHE[model_name_or_path]
+
+    try:
+        model = LLM(model=model_name_or_path, task="generate")
+    except Exception as exc:  # pragma: no cover - runtime/device failures
+        logger.warning("Failed to load vLLM model '%s': %s", model_name_or_path, exc)
+        _VLLM_CACHE[model_name_or_path] = None
+        return None
+
+    _VLLM_CACHE[model_name_or_path] = model
     return model
+
+
+def chat_api(
+    query: str,
+    system_query: str,
+    temperature: float,
+    max_tokens: int,
+    model_name: Optional[str] = None,
+) -> str:
+    """Generate text using an OpenAI-compatible API backend."""
+    api_key = (
+        os.getenv("LLM_API_KEY")
+        or os.getenv("OPENAI_API_KEY")
+    )
+    if not api_key:
+        raise RuntimeError("API key not provided (set OPENAI_API_KEY or LLM_API_KEY)")
+
+    base_url = (
+        os.getenv("LLM_API_BASE_URL")
+        or os.getenv("OPENAI_BASE_URL")
+    )
+    target_model = (
+        model_name
+        or os.getenv("LLM_API_MODEL")
+        or os.getenv("OPENAI_MODEL")
+        or "gpt-3.5-turbo"
+    )
+
+    messages = (
+        [{"role": "system", "content": system_query}] if system_query else []
+    ) + [{"role": "user", "content": query}]
+
+    # Prefer the official OpenAI client when available.
+    if _OPENAI_AVAILABLE and OpenAI is not None:
+        global _OPENAI_CLIENT
+        if _OPENAI_CLIENT is None:
+            client_kwargs = {"api_key": api_key}
+            if base_url:
+                client_kwargs["base_url"] = base_url
+            _OPENAI_CLIENT = OpenAI(**client_kwargs)
+
+        client = _OPENAI_CLIENT
+
+        try:
+            response = client.chat.completions.create(
+                model=target_model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            choices = getattr(response, "choices", None)
+            if choices:
+                return choices[0].message.content or ""
+        except AttributeError:
+            # The installed SDK does not provide chat.completions (>=1.0 prefers responses)
+            pass
+        except Exception as exc:
+            raise RuntimeError(f"OpenAI chat.completions failed: {exc}") from exc
+
+        try:
+            response = client.responses.create(
+                model=target_model,
+                input=messages,
+                temperature=temperature,
+                max_output_tokens=max_tokens,
+            )
+            if hasattr(response, "output_text") and response.output_text:
+                return response.output_text
+            outputs = getattr(response, "output", None)
+            if outputs:
+                text_chunks = [getattr(chunk, "text", "") for chunk in outputs]
+                combined = "".join(text_chunks).strip()
+                if combined:
+                    return combined
+        except Exception as exc:
+            raise RuntimeError(f"OpenAI responses API failed: {exc}") from exc
+
+        raise RuntimeError("OpenAI client returned no content")
+
+    if not _REQUESTS_AVAILABLE or requests is None:
+        raise RuntimeError("Neither OpenAI SDK nor requests library is available for API mode")
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": target_model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    endpoint_base = base_url or "https://api.openai.com/v1"
+    url = endpoint_base.rstrip("/") + "/chat/completions"
+
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=60)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as exc:
+        raise RuntimeError(f"HTTP API request failed: {exc}") from exc
+
+    choices = data.get("choices") if isinstance(data, dict) else None
+    if choices:
+        return choices[0].get("message", {}).get("content", "")
+
+    raise RuntimeError("API response did not contain choices")
 
 
 def load_redocred() -> Any:
@@ -146,6 +296,23 @@ def format_dataset_redocred(dataset: Any) -> List[Dict]:
     return annotated_triples
 
 
+def format_triples_for_input(triples: List[Dict[str, Dict[str, str]]]) -> str:
+    """Format triples into a readable string representation."""
+    lines = ["# Triples (head:type, relation, tail:type):"]
+    for triple in triples:
+        head = triple.get("head", {})
+        tail = triple.get("tail", {})
+        relation = triple.get("relation", "")
+        head_entity = head.get("entity", "")
+        head_type = head.get("type", "")
+        tail_entity = tail.get("entity", "")
+        tail_type = tail.get("type", "")
+        lines.append(
+            f'("{head_entity}":{head_type}, "{relation}", "{tail_entity}":{tail_type})'
+        )
+    return "\n".join(lines)
+
+
 def annotate_entities(text: str, prompt: str, iter: int = 1, threshold: float = 0.5) -> List[Dict]:
     """
     Annotate entities in the given text using an LLM with Self-Consistency.
@@ -161,6 +328,11 @@ def annotate_entities(text: str, prompt: str, iter: int = 1, threshold: float = 
         List[Dict]: A list of dictionaries containing annotated entities:
             - "entity": str, the entity mention
             - "type": str, the entity type
+    Notes:
+        The function prefers a local vLLM backend and automatically falls back to
+        an OpenAI-compatible API when vLLM cannot be used. Set `OPENAI_API_KEY`
+        (or `LLM_API_KEY`) and optionally `OPENAI_BASE_URL`/`OPENAI_MODEL` for the
+        API fallback.
     """
 
     def parse_entities_from_response(response: str) -> Set[Tuple[str, str]]:
@@ -177,24 +349,57 @@ def annotate_entities(text: str, prompt: str, iter: int = 1, threshold: float = 
         matches = re.findall(pattern, response)
         return set((ent.strip(), typ.strip()) for ent, typ in matches)
 
-    sampling_params = SamplingParams(
-        temperature=0.8,
-        top_p=1,
-        top_k=-1,
-        repetition_penalty=1.1,
-        max_tokens=512,
-        min_tokens=64
-    )
+    temperature = 0.8
+    max_tokens = 512
+    sampling_params = None
+    if SamplingParams is not None:
+        sampling_params = SamplingParams(
+            temperature=temperature,
+            top_p=1,
+            top_k=-1,
+            repetition_penalty=1.1,
+            max_tokens=max_tokens,
+            min_tokens=64
+        )
 
     all_entities = []
+    vllm_model = load_vllm(os.getenv("VLLM_MODEL_NAME", "HuggingFaceH4/zephyr-7b-beta"))
+    use_vllm = vllm_model is not None and sampling_params is not None
+    backend_error: Optional[Exception] = None
 
     for _ in range(iter):
-        response = chat_vllm(
-            model=load_vllm(),
-            system_query=prompt,
-            query=text,
-            sampling_params=sampling_params
-        )
+        response: Optional[str] = None
+
+        if use_vllm:
+            try:
+                response = chat_vllm(
+                    model=vllm_model,
+                    system_query=prompt,
+                    query=text,
+                    sampling_params=sampling_params
+                )
+            except Exception as exc:  # pragma: no cover - propagate to API fallback
+                logger.warning(
+                    "vLLM backend unavailable, falling back to API mode: %s", exc
+                )
+                backend_error = exc
+                use_vllm = False
+
+        if response is None:
+            try:
+                response = chat_api(
+                    query=text,
+                    system_query=prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+            except Exception as exc:
+                if backend_error is not None:
+                    raise RuntimeError(
+                        "Both vLLM and API backends failed"
+                    ) from exc
+                raise
+
         parsed_entities = parse_entities_from_response(response)
         all_entities.append(parsed_entities)
 
@@ -331,4 +536,3 @@ def naive_mapping(text: str, triples: List[Dict]) -> Tuple[List[Dict], Set[Tuple
             remaining_triples.append(triple)
 
     return remaining_triples, used_entities
-
