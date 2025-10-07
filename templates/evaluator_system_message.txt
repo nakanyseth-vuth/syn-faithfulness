@@ -1,0 +1,14 @@
+You are an expert in evaluating synthetic data generated from Knowledge Graphs.
+Your task is to analyze the provided synthetic data and assess its faithfulness to the given Knowledge Graph (KG).
+
+Please consider the following aspects in your evaluation:
+1. Entity Coverage: Check if all entities from the KG are mentioned in the synthetic data.
+2. Text Coherence: Ensure that the synthetic data is coherent and logically structured.
+Provide a detailed report highlighting strengths and areas for improvement in the synthetic data's faithfulness to the KG.
+Here is the synthetic data to evaluate:
+{current_program}
+Here is the Knowledge Graph (KG) to cover:
+{artifacts}
+Here are the current performance metrics:
+{metrics}
+Please output your evaluation report only.

@@ -1,0 +1,425 @@
+{
+  "faithfulness_score": 0.36363636363636365,
+  "text_length": 148,
+  "entity_density": 0.45454545454545453,
+  "entity_coverage": 0.45454545454545453,
+  "total_entities": 11,
+  "combined_score": 0.36363636363636365,
+  "program_artifacts": [
+    {
+      "head": {
+        "entity": "Zest Airways, Inc.",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Pasay City",
+        "type": "LOC"
+      },
+      "relation": "headquarters location",
+      "evidence": [
+        0
+      ]
+    },
+    {
+      "head": {
+        "entity": "Asian Spirit and Zest Air",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Pasay City",
+        "type": "LOC"
+      },
+      "relation": "headquarters location",
+      "evidence": [
+        0
+      ]
+    },
+    {
+      "head": {
+        "entity": "AirAsia Zest",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Pasay City",
+        "type": "LOC"
+      },
+      "relation": "headquarters location",
+      "evidence": [
+        0
+      ]
+    },
+    {
+      "head": {
+        "entity": "Zest Airways, Inc.",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        2,
+        4,
+        7
+      ]
+    },
+    {
+      "head": {
+        "entity": "Zest Airways, Inc.",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        2,
+        4,
+        7
+      ]
+    },
+    {
+      "head": {
+        "entity": "Asian Spirit and Zest Air",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        2,
+        4,
+        7
+      ]
+    },
+    {
+      "head": {
+        "entity": "Asian Spirit and Zest Air",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        2,
+        4,
+        7
+      ]
+    },
+    {
+      "head": {
+        "entity": "AirAsia Zest",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        2,
+        4,
+        7
+      ]
+    },
+    {
+      "head": {
+        "entity": "AirAsia Zest",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        2,
+        4,
+        7
+      ]
+    },
+    {
+      "head": {
+        "entity": "Zest Air",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        6,
+        7
+      ]
+    },
+    {
+      "head": {
+        "entity": "Zest Air",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        6,
+        7
+      ]
+    },
+    {
+      "head": {
+        "entity": "Pasay City",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        0
+      ]
+    },
+    {
+      "head": {
+        "entity": "Pasay City",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        0
+      ]
+    },
+    {
+      "head": {
+        "entity": "Pasay City",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Metro Manila",
+        "type": "LOC"
+      },
+      "relation": "located in the administrative territorial entity",
+      "evidence": [
+        0
+      ]
+    },
+    {
+      "head": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Metro Manila",
+        "type": "LOC"
+      },
+      "relation": "contains administrative territorial entity",
+      "evidence": [
+        0
+      ]
+    },
+    {
+      "head": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Metro Manila",
+        "type": "LOC"
+      },
+      "relation": "contains administrative territorial entity",
+      "evidence": [
+        0
+      ]
+    },
+    {
+      "head": {
+        "entity": "Manila",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        0,
+        3
+      ]
+    },
+    {
+      "head": {
+        "entity": "Manila",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        0,
+        3
+      ]
+    },
+    {
+      "head": {
+        "entity": "Metro Manila",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Pasay City",
+        "type": "LOC"
+      },
+      "relation": "contains administrative territorial entity",
+      "evidence": [
+        0
+      ]
+    },
+    {
+      "head": {
+        "entity": "Metro Manila",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "relation": "located in the administrative territorial entity",
+      "evidence": [
+        0,
+        3
+      ]
+    },
+    {
+      "head": {
+        "entity": "Metro Manila",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "relation": "located in the administrative territorial entity",
+      "evidence": [
+        0,
+        3
+      ]
+    },
+    {
+      "head": {
+        "entity": "Metro Manila",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        0,
+        3
+      ]
+    },
+    {
+      "head": {
+        "entity": "Metro Manila",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        0,
+        3
+      ]
+    },
+    {
+      "head": {
+        "entity": "Ninoy Aquino International Airport",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Pasay City",
+        "type": "LOC"
+      },
+      "relation": "located in the administrative territorial entity",
+      "evidence": [
+        0,
+        3
+      ]
+    },
+    {
+      "head": {
+        "entity": "Ninoy Aquino International Airport",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        0,
+        3
+      ]
+    },
+    {
+      "head": {
+        "entity": "Ninoy Aquino International Airport",
+        "type": "LOC"
+      },
+      "tail": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        0,
+        3
+      ]
+    },
+    {
+      "head": {
+        "entity": "Asian Spirit",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        4
+      ]
+    },
+    {
+      "head": {
+        "entity": "Asian Spirit",
+        "type": "ORG"
+      },
+      "tail": {
+        "entity": "Republic of the Philippines",
+        "type": "LOC"
+      },
+      "relation": "country",
+      "evidence": [
+        4
+      ]
+    }
+  ]
+}

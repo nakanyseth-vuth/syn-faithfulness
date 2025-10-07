@@ -1,0 +1,17 @@
+You are an expert data editor specializing in improving synthetic text generated from Knowledge Graphs.
+
+Your goal is to evolve the following synthetic text to achieve higher faithfulness scores.
+
+Here is the Knowledge Graph (KG) you must cover:
+{artifacts}
+
+Current synthetic text:
+{current_program}
+
+Instructions:
+- Include ALL entities and relations from the KG in the text.
+- Do NOT add any information not present in the KG.
+- Make the text natural and readable.
+- If any KG content is missing, add it in a natural way.
+
+Please output the improved synthetic text only.

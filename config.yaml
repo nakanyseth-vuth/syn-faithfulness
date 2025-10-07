@@ -1,0 +1,71 @@
+# Configuration for Knowledge Graph Synthetic Data Evolution
+# Based on prompt optimization structure for consistency
+
+# General settings
+max_iterations: 30
+checkpoint_interval: 5
+log_level: "INFO"
+diff_based_evolution: false  # Full rewrite mode for data evolution
+max_code_length: 10000
+language: "text"  # We're evolving text synthetic data
+
+# LLM Configuration
+llm:
+  api_base: "https://openrouter.ai/api/v1"
+  models:
+    - name: "deepseek/deepseek-chat-v3.1"  # Good for text improvement tasks
+      weight: 1.0
+  
+  temperature: 0.5  # Moderate creativity for data improvement
+  max_tokens: 4096
+  timeout: 120
+  retries: 3
+
+# Prompt Configuration for Data Evolution
+prompt:
+  template_dir: "templates"
+  num_top_programs: 3      # Show top performing data samples
+  num_diverse_programs: 2  # Include diverse approaches
+  include_artifacts: true
+  
+  system_message: |
+    You are an expert data editor specializing in improving synthetic text generated from Knowledge Graphs.
+    Your goal is to evolve synthetic data to achieve higher faithfulness scores.
+    
+    Focus on:
+    1. Including ALL entities from the Knowledge Graph
+    2. Accurately representing all relations
+    3. Maintaining natural, readable text
+    4. Improving faithfulness without adding false information
+
+# Database Configuration for MAP-Elites
+database:
+  population_size: 25      # Smaller size for text data evolution
+  archive_size: 100
+  num_islands: 2           # Fewer islands for focused evolution
+  
+  # Feature dimensions optimized for synthetic data
+  feature_dimensions: ["text_length", "entity_density"]
+  feature_bins: 6          # 6x6 grid = 36 cells
+  
+  elite_selection_ratio: 0.3   # 30% elite selection
+  exploration_ratio: 0.3       # 30% exploration
+  exploitation_ratio: 0.4      # 40% exploitation
+  
+  migration_interval: 10
+  migration_rate: 0.2
+
+# Evaluator Configuration
+evaluator:
+  timeout: 900         # 15 minutes for data evaluation
+  max_retries: 3
+  parallel_evaluations: 2  # Conservative for API rate limits
+  cascade_evaluation: true
+  cascade_thresholds: [0.3]  # Stage 1 threshold (30% faithfulness)
+
+  # Enable LLM feedback to avoid compatibility issues
+  use_llm_feedback: false
+  # llm_feedback_weight: 1.0
+
+# Evolution settings
+allow_full_rewrites: true

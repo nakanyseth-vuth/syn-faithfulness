@@ -7,6 +7,8 @@ import re
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from datasets import load_dataset
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from a .env file if present
 
 try:  # vLLM is optional at runtime
     from vllm import LLM, SamplingParams
@@ -297,7 +299,7 @@ def format_dataset_redocred(dataset: Any) -> List[Dict]:
 
 
 def format_triples_for_input(triples: List[Dict[str, Dict[str, str]]]) -> str:
-    """Format triples into a readable string representation."""
+    """Format triples into a readable string representation for prompt curation."""
     lines = ["# Triples (head:type, relation, tail:type):"]
     for triple in triples:
         head = triple.get("head", {})
@@ -488,6 +490,11 @@ def gen_entity_annotation_prompt(entities: List[Dict] = []) -> str:
             )
 
     return prompt + "===\nText: "
+
+def get_reference_kg(triples: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Return a reference knowledge graph for faithfulness scoring."""
+    return [{k:d[k] for k in list(d.keys())[:2]} for d in triples]
+
 
 # This is the function to get K'
 def naive_mapping(text: str, triples: List[Dict]) -> Tuple[List[Dict], Set[Tuple[str, str]]]:

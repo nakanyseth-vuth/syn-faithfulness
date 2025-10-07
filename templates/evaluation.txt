@@ -1,0 +1,12 @@
+Analyze this synthetic data generated from Knowledge Graph:
+
+Current synthetic data:
+{current_program}
+
+Knowledge Graph (KG) to cover:
+{artifacts}
+
+Current performance metrics:
+{metrics}
+
+Provide specific feedback on how to improve this synthetic text's faithfulness to the Knowledge Graph. Focus on entity coverage, relation accuracy, and text coherence.
